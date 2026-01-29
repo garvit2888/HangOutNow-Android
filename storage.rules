@@ -1,0 +1,54 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user is the owner
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    // Helper function to validate image size (max 5MB)
+    function isValidImageSize() {
+      return request.resource.size < 5 * 1024 * 1024;
+    }
+    
+    // Helper function to validate image type
+    function isValidImageType() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    // User avatars - only owner can upload/delete, anyone can read
+    match /user-avatars/{userId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && 
+                      isOwner(userId) && 
+                      isValidImageSize() && 
+                      isValidImageType();
+      allow delete: if isAuthenticated() && isOwner(userId);
+    }
+    
+    // Chat images - authenticated users can upload, anyone can read
+    match /chat-images/{activityId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && 
+                      isValidImageSize() && 
+                      isValidImageType();
+      allow delete: if isAuthenticated();
+    }
+    
+    // Group avatars - authenticated users can upload/update
+    match /group-avatars/{groupId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && 
+                      isValidImageSize() && 
+                      isValidImageType();
+      allow delete: if isAuthenticated();
+    }
+  }
+}
+

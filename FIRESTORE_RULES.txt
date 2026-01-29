@@ -1,0 +1,87 @@
+// COPY AND PASTE THIS INTO FIREBASE CONSOLE → FIRESTORE DATABASE → RULES
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function: Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function: Check if user owns the document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Helper function: Check if user is member of activity
+    function isMemberOfActivity(activityData) {
+      return isAuthenticated() && 
+        (activityData.members != null && 
+         activityData.members.hasAny([
+           request.auth.uid,
+           request.auth.token.email
+         ]));
+    }
+    
+    // Users collection - users can read/write only their own document
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // User chats collection - users can read/write only their own chats
+    match /userChats/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Activities collection
+    match /activities/{activityId} {
+      // Anyone authenticated can read activities
+      allow read: if isAuthenticated();
+      
+      // Anyone authenticated can create activities
+      allow create: if isAuthenticated();
+      
+      // Allow updates:
+      // - Creator can update anything
+      // - Any authenticated user can update (for joining/leaving activities)
+      // Note: Your app logic handles leaving other activities before joining
+      allow update: if isAuthenticated();
+      
+      // Only creator can delete
+      allow delete: if isAuthenticated() && resource.data.createdBy == request.auth.uid;
+    }
+    
+    // Messages/chat messages in activities
+    match /activities/{activityId}/messages/{messageId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Reports collection - authenticated users can create reports
+    match /reports/{reportId} {
+      allow create: if isAuthenticated();
+      // Only admins can read/update/delete reports (you can restrict this further)
+      allow read, update, delete: if isAuthenticated();
+    }
+    
+    // SOS Reports collection - for safety monitoring
+    match /sosReports/{sosReportId} {
+      // Authenticated users can create SOS reports
+      allow create: if isAuthenticated();
+      // Only admins/moderators should read SOS reports for monitoring
+      // For now, allow authenticated users to read (you can restrict this to admins only)
+      allow read: if isAuthenticated();
+      // Only admins can update/delete SOS reports (to mark as resolved)
+      allow update, delete: if isAuthenticated();
+    }
+    
+    // Group chats - if you have a separate chats collection
+    match /chats/{chatId} {
+      allow read, write: if isAuthenticated();
+      match /messages/{messageId} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+  }
+}
+

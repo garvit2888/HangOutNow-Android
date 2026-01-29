@@ -1,0 +1,68 @@
+{
+    "expo": {
+      "owner": "garvit2888",
+      "name": "HangOutNow",
+      "slug": "hangoutnow",
+      "version": "1.0.0",
+      "orientation": "portrait",
+      "icon": "./assets/images/icon.png",
+      "scheme": "myapp",
+      "userInterfaceStyle": "automatic",
+      "newArchEnabled": true,
+      "splash": {
+        "image": "./assets/images/icon.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#ffffff"
+      },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.hangoutnow",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app needs your location to show nearby activities and help you meet up with people.",
+        "NSCameraUsageDescription": "Camera access is used to take your profile photo.",
+        "NSPhotoLibraryUsageDescription": "Photo library access lets you choose a profile photo.",
+        "NSPhotoLibraryAddUsageDescription": "The app may save your edited profile photo to your library."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "app.hangoutnow",
+      "userInterfaceStyle": "light",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBzT2XnCZqhhBUFsQP293T2Hc22bTQgyj0"
+        }
+      }
+    },
+      "web": {
+        "favicon": "./assets/images/icon.png"
+      },
+      "plugins": [
+        [
+          "expo-router",
+          {
+            "origin": "https://rork.com/"
+          }
+        ],
+        [
+          "expo-notifications",
+          {
+            "icon": "./assets/images/icon.png",
+            "color": "#FF231F7C",
+            "sounds": []
+          }
+        ]
+      ],
+      "experiments": {
+        "typedRoutes": true
+      }
+    }
+  }
