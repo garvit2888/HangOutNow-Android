@@ -1,19 +1,19 @@
 {
-    "expo": {
-      "owner": "garvit2888",
-      "name": "HangOutNow",
-      "slug": "hangoutnow",
-      "version": "1.0.0",
-      "orientation": "portrait",
-      "icon": "./assets/images/icon.png",
-      "scheme": "myapp",
-      "userInterfaceStyle": "automatic",
-      "newArchEnabled": true,
-      "splash": {
-        "image": "./assets/images/icon.png",
-        "resizeMode": "contain",
-        "backgroundColor": "#ffffff"
-      },
+  "expo": {
+    "owner": "garvit2888",
+    "name": "HangOutNow",
+    "slug": "hangoutnow",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "myapp",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "app.hangoutnow",
@@ -42,27 +42,35 @@
         }
       }
     },
-      "web": {
-        "favicon": "./assets/images/icon.png"
-      },
-      "plugins": [
-        [
-          "expo-router",
-          {
-            "origin": "https://rork.com/"
-          }
-        ],
-        [
-          "expo-notifications",
-          {
-            "icon": "./assets/images/icon.png",
-            "color": "#FF231F7C",
-            "sounds": []
-          }
-        ]
+    "web": {
+      "favicon": "./assets/images/icon.png"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "origin": "https://rork.com/"
+        }
       ],
-      "experiments": {
-        "typedRoutes": true
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#FF231F7C",
+          "sounds": []
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": "https://rork.com/"
+      },
+      "eas": {
+        "projectId": "e1faa482-9d1b-4ce6-a5f4-bc7d2e14dc21"
       }
     }
   }
+}
