@@ -850,45 +850,45 @@ export default function MapTab() {
                         e.stopPropagation();
                         handleMarkerPress(g);
                       }}
-                      tracksViewChanges={Platform.OS === 'android'}
                     >
-                      <View style={styles.markerContainer} collapsable={false}>
-                        <View style={[styles.markerPill, isPopular && styles.markerPillPopular]} collapsable={false}>
+                      <View style={styles.markerContainer}>
+                        <View style={[styles.markerPill, isPopular && styles.markerPillPopular]}>
                           <Text
                             style={[styles.markerEmoji, isPopular && styles.markerEmojiPopular]}
                             allowFontScaling={false}
-                            numberOfLines={1}
                           >
                             {displayEmoji}
                           </Text>
                         </View>
 
-                        {/* Profile pictures around the emoji */}
-                        {visibleMembers.map((member, index) => {
-                          // Position avatars around the circle
-                          const angle = (index * 120) - 90; // 120° apart, starting from top
-                          const radius = 25; // Distance from center (increased to prevent overlap)
-                          const x = Math.cos(angle * Math.PI / 180) * radius;
-                          const y = Math.sin(angle * Math.PI / 180) * radius;
-
-                          return (
-                            <View
-                              key={member.id}
-                              style={[
-                                styles.memberAvatar,
-                                {
-                                  left: x + 35, // Center offset (container width 70 / 2)
-                                  top: y + 35,  // Center offset (container height 70 / 2)
-                                }
-                              ]}
-                            >
-                              <Image
-                                source={{ uri: member.avatar }}
-                                style={styles.memberAvatarImage}
-                              />
-                            </View>
-                          );
+//                         {/* TEMPORARILY DISABLED - Avatar rendering causes Android clipping
+// {/* Profile pictures around the emoji */}
+//                         {visibleMembers.map((member, index) => {
+//                           // Position avatars around the circle
+//                           const angle = (index * 120) - 90; // 120° apart, starting from top
+//                           const radius = 25; // Distance from center (increased to prevent overlap)
+//                           const x = Math.cos(angle * Math.PI / 180) * radius;
+//                           const y = Math.sin(angle * Math.PI / 180) * radius;
+// 
+//                           return (
+//                             <View
+//                               key={member.id}
+//                               style={[
+//                                 styles.memberAvatar,
+//                                 {
+//                                   left: x + 35, // Center offset (container width 70 / 2)
+//                                   top: y + 35,  // Center offset (container height 70 / 2)
+//                                 }
+//                               ]}
+//                             >
+//                               <Image
+//                                 source={{ uri: member.avatar }}
+//                                 style={styles.memberAvatarImage}
+//                               />
+//                             </View>
+//                           );
                         })}
+*/}
                       </View>
                     </Marker>
                   );
@@ -1042,14 +1042,14 @@ export default function MapTab() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   mapContainer: { flex: 1, marginHorizontal: 8, marginBottom: 8, borderRadius: 20, overflow: 'hidden', backgroundColor: Colors.white, position: 'relative' },
-  markerContainer: { position: 'relative', width: 70, height: 70, alignItems: 'center', justifyContent: 'center', padding: 10 },
-  markerPill: { backgroundColor: Colors.white, width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: '#333', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  markerContainer: { width: 50, height: 50, alignItems: 'center', justifyContent: 'center' },
+  markerPill: { backgroundColor: Colors.white, width: 46, height: 46, borderRadius: 23, borderWidth: 2, borderColor: '#333', justifyContent: 'center', alignItems: 'center' },
   floatingSOS: { position: 'absolute', left: 16, bottom: 170, width: 56, height: 56, borderRadius: 28, overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 6, shadowOffset: { width: 0, height: 4 }, elevation: 8, zIndex: 9999 },
   floatingSOSInner: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
   floatingSOSText: { color: Colors.white, fontWeight: '900', letterSpacing: 1, fontSize: 14 },
-  markerPillPopular: { width: 48, height: 48, borderRadius: 24, borderWidth: 3, borderColor: Colors.secondary },
-  markerEmoji: { fontSize: 26, textAlign: 'center', includeFontPadding: false, textAlignVertical: 'center' },
-  markerEmojiPopular: { fontSize: 30 },
+  markerPillPopular: { width: 52, height: 52, borderRadius: 26, borderWidth: 3, borderColor: Colors.secondary },
+  markerEmoji: { fontSize: 28, textAlign: 'center' },
+  markerEmojiPopular: { fontSize: 32 },
   memberAvatar: { position: 'absolute', width: 18, height: 18, borderRadius: 9, overflow: 'hidden', borderWidth: 2, borderColor: Colors.white, backgroundColor: Colors.white, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.3, shadowRadius: 2, elevation: 3 },
   memberAvatarImage: { width: '100%', height: '100%', borderRadius: 7 },
   listViewButton: { position: 'absolute', bottom: 162, right: 16, width: 48, height: 48, borderRadius: 24, backgroundColor: Colors.white, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4, elevation: 5 },
