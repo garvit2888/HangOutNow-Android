@@ -198,11 +198,8 @@ function RootLayoutNav() {
                 (data.createdBy && typeof data.createdBy === 'string' &&
                   (data.createdBy.includes(currentUserId) || data.createdBy.includes(loginEmail || '')));
 
-              // Check if we haven't shown this activity's modal yet
-              const notShownYet = !shownActivityIds.current.has(doc.id);
-
               // Only include activities the user created or joined (and hasn't left)
-              if ((isCreator || isMember) && notShownYet) {
+              if (isCreator || isMember) {
                 const createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
 
                 // Get emoji exactly like PastActivitiesModal does: access activity.emoji directly
@@ -231,17 +228,19 @@ function RootLayoutNav() {
       // Show modal ONLY for the most recently started activity (first one after sorting)
       if (startedActivities.length > 0) {
         const mostRecentActivity = startedActivities[0];
-        const chosen = {
-          id: mostRecentActivity.id,
-          name: mostRecentActivity.name,
-          emoji: mostRecentActivity.emoji, // Use only the specific emoji from the activity
-        };
-        setStartedActivity(chosen);
-        setSOSActive(true, { id: chosen.id, name: chosen.name });
-        setShowActivityStartedModal(true);
-        shownActivityIds.current.add(mostRecentActivity.id);
-        // Persist the updated set
-        await saveShownIds(shownActivityIds.current);
+
+        // Only update SOS if this is a different activity than currently tracked
+        // This ensures we only show ONE activity (the latest) at any time
+        if (sos?.activityId !== mostRecentActivity.id) {
+          const chosen = {
+            id: mostRecentActivity.id,
+            name: mostRecentActivity.name,
+            emoji: mostRecentActivity.emoji, // Use only the specific emoji from the activity
+          };
+          setStartedActivity(chosen);
+          setSOSActive(true, { id: chosen.id, name: chosen.name });
+          setShowActivityStartedModal(true);
+        }
       }
     } catch (error) {
       console.error('❌ Error checking for started activities:', error);
