@@ -10,7 +10,7 @@ import { useGroupStore } from '@/store/groupStore';
 import { useUserStore } from '@/store/userStore';
 import { useChatStore } from '@/store/chatStore';
 import { GroupMessage } from '@/types';
-import { Send, ArrowLeft, Flag, LogOut, X, Plus, Camera, ImageIcon } from 'lucide-react-native';
+import { Send, ArrowLeft, Flag, LogOut, X, Plus, Camera, ImageIcon, User } from 'lucide-react-native';
 import { sendMessage, subscribeToMessages } from '@/services/chatService';
 import { uploadImage } from '@/services/storageService';
 import { leaveActivity as leaveActivityFirestore } from '@/services/activityService';
@@ -77,16 +77,16 @@ export default function GroupChatScreen() {
   useEffect(() => {
     // Look in both groups and activeGroups (Firestore synced activities)
     const foundGroup = activeGroups.find(g => g.id === id) || groups.find(g => g.id === id);
-    
+
     if (foundGroup) {
       setGroup(foundGroup);
-      
+
       // Calculate chat end time (6 hours after activity expires)
       if (foundGroup.expiresAt) {
         const expiresAt = new Date(foundGroup.expiresAt);
         const chatEnd = new Date(expiresAt.getTime() + 6 * 60 * 60 * 1000); // Add 6 hours
         setChatEndTime(chatEnd);
-        
+
         const now = new Date();
         // Chat has ended if chatEndTime has passed
         setActivityExpired(chatEnd <= now);
@@ -94,19 +94,19 @@ export default function GroupChatScreen() {
         setChatEndTime(null);
         setActivityExpired(false);
       }
-      
+
       // Debug logging
       console.log('🔍 Checking membership for group:', foundGroup.name);
       console.log('🔍 Current user ID:', currentUserId);
       console.log('🔍 Group members:', foundGroup.members.map(m => ({ id: m.id, email: m.email, name: m.name })));
-      
+
       // Comprehensive membership check - check multiple possible matches
       const isMember = foundGroup.members.some(m => {
         const idMatch = m.id === currentUserId;
         const emailMatch = m.email === currentUserId;
         const profileUidMatch = m.id === profile?.uid;
         const loginEmailMatch = m.email === loginEmail;
-        
+
         console.log('🔍 Member check for', m.name, ':', {
           idMatch,
           emailMatch,
@@ -118,11 +118,11 @@ export default function GroupChatScreen() {
           profileUid: profile?.uid,
           loginEmail
         });
-        
+
         return idMatch || emailMatch || profileUidMatch || loginEmailMatch;
       });
       console.log('🔍 Is member result:', isMember);
-      
+
       // For expired activities, allow viewing chat even if not a member (within 6-hour window)
       // Only check membership strictly for active activities
       if (!isMember) {
@@ -130,14 +130,14 @@ export default function GroupChatScreen() {
         const now = new Date();
         const expiresAt = foundGroup.expiresAt ? new Date(foundGroup.expiresAt) : null;
         const isActivityStarted = expiresAt && expiresAt <= now;
-        
+
         if (!isActivityStarted) {
           // Activity is still active - user must be a member
           // If user just joined, wait for Firestore to sync with retries
           if (justJoined === 'true') {
             console.log('🔄 User just joined, waiting for Firestore sync...');
             setIsCheckingMembership(true);
-            
+
             // Check Firestore directly with retries
             const checkMembershipWithRetries = async (retries = 5, delay = 1000) => {
               for (let i = 0; i < retries; i++) {
@@ -145,11 +145,11 @@ export default function GroupChatScreen() {
                   console.log(`🔄 Checking membership (attempt ${i + 1}/${retries})...`);
                   // Query Firestore directly to get fresh data
                   const activityDoc = await getDoc(doc(db, 'activities', id as string));
-                  
+
                   if (activityDoc.exists()) {
                     const activityData = activityDoc.data() as Group;
                     const members = activityData.members || [];
-                    
+
                     const isMemberInFirestore = members.some((m: any) => {
                       const memberId = m?.id || m;
                       const memberEmail = m?.email;
@@ -161,7 +161,7 @@ export default function GroupChatScreen() {
                         memberId === profile?.email
                       );
                     });
-                    
+
                     if (isMemberInFirestore) {
                       console.log('✅ Membership confirmed from Firestore!');
                       // Update local state
@@ -175,7 +175,7 @@ export default function GroupChatScreen() {
                       return; // Success, exit retry loop
                     }
                   }
-                  
+
                   // If not found yet, wait before next retry
                   if (i < retries - 1) {
                     await new Promise(resolve => setTimeout(resolve, delay));
@@ -189,7 +189,7 @@ export default function GroupChatScreen() {
                   }
                 }
               }
-              
+
               // After all retries failed, check local state one more time
               console.log('🔄 Final check in local state...');
               const finalGroup = activeGroups.find(g => g.id === id) || groups.find(g => g.id === id);
@@ -209,7 +209,7 @@ export default function GroupChatScreen() {
                   return;
                 }
               }
-              
+
               // If still not a member after all retries
               console.log('❌ Not a member after all retries');
               setIsCheckingMembership(false);
@@ -217,7 +217,7 @@ export default function GroupChatScreen() {
                 { text: 'OK', onPress: () => router.replace('/(tabs)/map') }
               ]);
             };
-            
+
             // Start checking with retries
             checkMembershipWithRetries();
           } else {
@@ -239,12 +239,12 @@ export default function GroupChatScreen() {
       // Group not found - load from chat preview to keep chat visible
       const { chats } = useChatStore.getState();
       const chatPreview = chats.find(c => c.id === id);
-      
+
       if (chatPreview) {
         // Create a minimal group object from chat preview to keep UI working
         const expiredTime = new Date(Date.now() - 1000);
         const chatEnd = new Date(expiredTime.getTime() + 6 * 60 * 60 * 1000); // 6 hours after expiration
-        
+
         const minimalGroup = {
           id: id as string,
           name: chatPreview.name,
@@ -264,18 +264,18 @@ export default function GroupChatScreen() {
         if (justJoined === 'true') {
           console.log('🔄 Group not found but user just joined, waiting for Firestore sync...');
           setIsCheckingMembership(true);
-          
+
           // Check Firestore directly with retries
           const checkMembershipWithRetries = async (retries = 5, delay = 1000) => {
             for (let i = 0; i < retries; i++) {
               try {
                 console.log(`🔄 Checking membership from Firestore (attempt ${i + 1}/${retries})...`);
                 const activityDoc = await getDoc(doc(db, 'activities', id as string));
-                
+
                 if (activityDoc.exists()) {
                   const activityData = activityDoc.data() as Group;
                   const members = activityData.members || [];
-                  
+
                   const isMemberInFirestore = members.some((m: any) => {
                     const memberId = m?.id || m;
                     const memberEmail = m?.email;
@@ -287,7 +287,7 @@ export default function GroupChatScreen() {
                       memberId === profile?.email
                     );
                   });
-                  
+
                   if (isMemberInFirestore) {
                     console.log('✅ Membership confirmed from Firestore!');
                     const updatedGroup = { ...activityData, id: activityDoc.id };
@@ -298,7 +298,7 @@ export default function GroupChatScreen() {
                     return;
                   }
                 }
-                
+
                 if (i < retries - 1) {
                   await new Promise(resolve => setTimeout(resolve, delay));
                   delay *= 1.5;
@@ -311,7 +311,7 @@ export default function GroupChatScreen() {
                 }
               }
             }
-            
+
             // Final check in local state
             console.log('🔄 Final check in local state...');
             const finalGroup = activeGroups.find(g => g.id === id) || groups.find(g => g.id === id);
@@ -332,14 +332,14 @@ export default function GroupChatScreen() {
                 return;
               }
             }
-            
+
             console.log('❌ Not a member after all retries');
             setIsCheckingMembership(false);
             Alert.alert('Not a member', 'You are no longer part of this group.', [
               { text: 'OK', onPress: () => router.replace('/(tabs)/map') }
             ]);
           };
-          
+
           checkMembershipWithRetries();
         } else {
           // No chat preview and not just joined - this is an error case
@@ -357,11 +357,11 @@ export default function GroupChatScreen() {
     const isChatOpen = true; // This chat screen is open, so messages are read
 
     const unsubscribe = subscribeToMessages(id as string, (firestoreMessages) => {
-      
+
       // Check if there are new messages (not sent by current user)
       const newMessages = firestoreMessages.slice(previousMessageCount);
       const newMessagesFromOthers = newMessages.filter(msg => msg.senderId !== currentUserId);
-      
+
       // Only increment unread if chat is NOT currently open (which is always false here since we're in the chat)
       // But we still track it in case user navigates away
       // Since chat is open, we mark as read when new messages arrive
@@ -372,14 +372,14 @@ export default function GroupChatScreen() {
         // Chat is not open, increment unread
         incrementUnread(id as string);
       }
-      
+
       // Update chat preview with latest message - preserve unread count
       if (firestoreMessages.length > 0 && group) {
         const lastMessage = firestoreMessages[firestoreMessages.length - 1];
         const { chats } = useChatStore.getState();
         const existingChat = chats.find(c => c.id === group.id);
         const currentUnread = existingChat?.unread || 0;
-        
+
         upsertChatPreview({
           id: group.id,
           userId: group.id,
@@ -391,7 +391,7 @@ export default function GroupChatScreen() {
           isGroupChat: true,
         });
       }
-      
+
       // Update previous message count for next comparison
       previousMessageCount = firestoreMessages.length;
       setMessages(firestoreMessages);
@@ -455,7 +455,7 @@ export default function GroupChatScreen() {
       } catch (e) {
         // silently ignore
       }
-      
+
       // Scroll to bottom when new messages arrive
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
@@ -479,7 +479,7 @@ export default function GroupChatScreen() {
 
         // Send to Firestore (will sync to all devices)
         await sendMessage(group.id, messageData);
-        
+
         // Also add to local store for immediate UI update (optional, since we have real-time listener)
         const newMessage: GroupMessage = {
           id: `msg_${Date.now()}`,
@@ -488,7 +488,7 @@ export default function GroupChatScreen() {
           timestamp: new Date().toISOString(),
         };
         addGroupMessage(group.id, newMessage);
-        
+
         setMessageText('');
       } catch (error) {
         console.error('❌ Error sending message:', error);
@@ -521,15 +521,15 @@ export default function GroupChatScreen() {
   // Handle leaving activity after reporting (without confirmation prompt)
   const handleLeaveAfterReport = async () => {
     if (!group) return;
-    
+
     try {
       // Leave from Firestore
       await leaveActivityFirestore(group.id, currentUserId);
       console.log('👋 Member left activity after report:', group.name);
-      
+
       // Leave from local store
       leaveGroup(group.id, currentUserId);
-      
+
       // Navigate back to map
       router.replace('/(tabs)/map');
     } catch (error) {
@@ -620,10 +620,10 @@ export default function GroupChatScreen() {
       try {
         // Show loading indicator
         setIsUploadingImage(true);
-        
+
         // Upload image to Firebase Storage first
         const uploadedImageUrl = await uploadImage(imageUri, `chat-images/${group.id}`);
-        
+
         const messageData = {
           senderId: currentUserId,
           senderName: profile?.fullName || 'You',
@@ -634,7 +634,7 @@ export default function GroupChatScreen() {
 
         // Send to Firestore (will sync to all devices)
         await sendMessage(group.id, messageData);
-        
+
         // Also add to local store
         const newMessage: GroupMessage = {
           id: `msg_${Date.now()}`,
@@ -643,7 +643,7 @@ export default function GroupChatScreen() {
           timestamp: new Date().toISOString(),
         };
         addGroupMessage(group.id, newMessage);
-        
+
         // Hide loading indicator
         setIsUploadingImage(false);
       } catch (error) {
@@ -661,7 +661,7 @@ export default function GroupChatScreen() {
 
   const calculateAge = (dobString?: string): number | null => {
     if (!dobString) return null;
-    
+
     try {
       // Handle DD/MM/YYYY format (from onboarding)
       if (dobString.includes('/')) {
@@ -670,54 +670,54 @@ export default function GroupChatScreen() {
           const day = parseInt(parts[0], 10);
           const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
           const year = parseInt(parts[2], 10);
-          
+
           if (isNaN(day) || isNaN(month) || isNaN(year)) {
             return null;
           }
-          
+
           const dob = new Date(year, month, day);
           const today = new Date();
-          
+
           // Validate the date is valid
           if (isNaN(dob.getTime())) {
             return null;
           }
-          
+
           let age = today.getFullYear() - dob.getFullYear();
           const monthDiff = today.getMonth() - dob.getMonth();
-          
+
           // Adjust age if birthday hasn't occurred this year
           if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
             age--;
           }
-          
+
           // Validate age is reasonable (between 0 and 150)
           if (age < 0 || age > 150) {
             return null;
           }
-          
+
           return age;
         }
       }
-      
+
       // Try parsing as ISO date string (fallback)
       const dob = new Date(dobString);
       if (isNaN(dob.getTime())) {
         return null;
       }
-      
+
       const today = new Date();
       let age = today.getFullYear() - dob.getFullYear();
       const monthDiff = today.getMonth() - dob.getMonth();
-      
+
       if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
         age--;
       }
-      
+
       if (age < 0 || age > 150) {
         return null;
       }
-      
+
       return age;
     } catch (error) {
       console.error('❌ Error calculating age:', error, 'DOB:', dobString);
@@ -746,13 +746,13 @@ export default function GroupChatScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={0}
       >
-        <LinearGradient 
-          colors={[Colors.primary, Colors.darkPurple]} 
+        <LinearGradient
+          colors={[Colors.primary, Colors.darkPurple]}
           style={[styles.container, { paddingBottom: insets.bottom }]}
         >
           {/* Header */}
@@ -768,16 +768,22 @@ export default function GroupChatScreen() {
               <ArrowLeft size={24} color={Colors.white} />
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={styles.headerInfo} 
+            <TouchableOpacity
+              style={styles.headerInfo}
               onPress={() => !activityExpired && router.push(`/group-details/${group.id}`)}
             >
-              <Image
-                source={{ uri: group.groupAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(group.name)}&background=random` }}
-                style={styles.groupAvatar}
-                contentFit="cover"
-                transition={200}
-              />
+              {(group.groupAvatar && !group.groupAvatar.includes('ui-avatars.com')) ? (
+                <Image
+                  source={{ uri: group.groupAvatar }}
+                  style={styles.groupAvatar}
+                  contentFit="cover"
+                  transition={200}
+                />
+              ) : (
+                <View style={[styles.groupAvatar, styles.defaultGroupAvatar]}>
+                  <User size={20} color="#FFFFFF" fill="#FFFFFF" />
+                </View>
+              )}
               <View style={styles.headerTextContainer}>
                 <Text style={styles.groupName}>{group.name}</Text>
                 {!activityExpired && (
@@ -799,9 +805,9 @@ export default function GroupChatScreen() {
           )}
 
           {/* Messages */}
-          <ScrollView 
+          <ScrollView
             ref={scrollViewRef}
-            style={styles.messagesContainer} 
+            style={styles.messagesContainer}
             contentContainerStyle={styles.messagesContent}
             keyboardShouldPersistTaps="handled"
           >
@@ -811,33 +817,33 @@ export default function GroupChatScreen() {
                 <Text style={styles.emptySubtext}>Start the conversation!</Text>
               </View>
             ) : (
-            messages.map((message) => (
-              message.senderId === 'system' ? (
-                <View key={message.id} style={styles.systemMessageContainer}>
-                  <Text style={styles.systemMessageText}>{message.text}</Text>
-                </View>
-              ) : (
-                <View key={message.id} style={[styles.messageContainer, message.senderId === currentUserId && styles.ownMessage]}>
-                  {message.senderId !== currentUserId && (
-                    <Text style={styles.senderName}>{message.senderName}</Text>
-                  )}
-                  <View style={[styles.messageBubble, message.senderId === currentUserId && styles.ownMessageBubble, (message as any).imageUri && styles.imageBubble]}>
-                    {(message as any).imageUri ? (
-                      <Image 
-                        source={{ uri: (message as any).imageUri }} 
-                        style={styles.messageImage}
-                        contentFit="cover"
-                      />
-                    ) : (
-                      <Text style={[styles.messageText, message.senderId === currentUserId && styles.ownMessageText]}>
-                        {message.text}
-                      </Text>
-                    )}
+              messages.map((message) => (
+                message.senderId === 'system' ? (
+                  <View key={message.id} style={styles.systemMessageContainer}>
+                    <Text style={styles.systemMessageText}>{message.text}</Text>
                   </View>
-                  <Text style={styles.messageTime}>{formatTime(message.timestamp)}</Text>
-                </View>
-              )
-            ))
+                ) : (
+                  <View key={message.id} style={[styles.messageContainer, message.senderId === currentUserId && styles.ownMessage]}>
+                    {message.senderId !== currentUserId && (
+                      <Text style={styles.senderName}>{message.senderName}</Text>
+                    )}
+                    <View style={[styles.messageBubble, message.senderId === currentUserId && styles.ownMessageBubble, (message as any).imageUri && styles.imageBubble]}>
+                      {(message as any).imageUri ? (
+                        <Image
+                          source={{ uri: (message as any).imageUri }}
+                          style={styles.messageImage}
+                          contentFit="cover"
+                        />
+                      ) : (
+                        <Text style={[styles.messageText, message.senderId === currentUserId && styles.ownMessageText]}>
+                          {message.text}
+                        </Text>
+                      )}
+                    </View>
+                    <Text style={styles.messageTime}>{formatTime(message.timestamp)}</Text>
+                  </View>
+                )
+              ))
             )}
           </ScrollView>
 
@@ -851,7 +857,7 @@ export default function GroupChatScreen() {
               >
                 <Plus size={24} color={isUploadingImage ? Colors.gray : Colors.white} />
               </TouchableOpacity>
-              
+
               <TextInput
                 style={styles.textInput}
                 placeholder="Type a message..."
@@ -862,7 +868,7 @@ export default function GroupChatScreen() {
                 multiline
                 maxLength={500}
               />
-              
+
               <TouchableOpacity
                 style={[styles.sendButton, (!messageText.trim() || isUploadingImage) && styles.sendButtonDisabled]}
                 onPress={handleSendMessage}
@@ -876,7 +882,7 @@ export default function GroupChatScreen() {
               </TouchableOpacity>
             </View>
           )}
-          
+
           {/* Uploading Indicator Overlay */}
           {isUploadingImage && (
             <View style={styles.uploadingOverlay}>
@@ -959,6 +965,7 @@ const styles = StyleSheet.create({
   backButton: { marginRight: 12 },
   headerInfo: { flex: 1, flexDirection: 'row', alignItems: 'center' },
   groupAvatar: { width: 40, height: 40, borderRadius: 20, marginRight: 12, borderWidth: 2, borderColor: 'rgba(255, 255, 255, 0.2)' },
+  defaultGroupAvatar: { backgroundColor: '#dbdbdb', justifyContent: 'center', alignItems: 'center' },
   headerTextContainer: { flex: 1 },
   groupName: { fontSize: 18, fontWeight: 'bold', color: Colors.white },
   memberCount: { fontSize: 12, color: Colors.secondary, marginTop: 2 },
@@ -984,7 +991,7 @@ const styles = StyleSheet.create({
   textInput: { flex: 1, backgroundColor: 'rgba(255, 255, 255, 0.15)', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 12, fontSize: 16, color: Colors.white, maxHeight: 100, marginRight: 8 },
   sendButton: { backgroundColor: Colors.secondary, borderRadius: 20, width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
   sendButtonDisabled: { backgroundColor: Colors.gray },
-  
+
   // Members Sheet (Instagram-style)
   membersSheetOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end' },
   membersSheetBackdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)' },
@@ -1002,7 +1009,7 @@ const styles = StyleSheet.create({
   leaveGroupText: { color: Colors.white, fontSize: 16, fontWeight: 'bold' },
   reportGroupButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.lightGray, borderRadius: 12, paddingVertical: 14, gap: 8 },
   reportGroupText: { color: '#FF3B30', fontSize: 16, fontWeight: 'bold' },
-  
+
   // Uploading Indicator
   uploadingOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.7)', justifyContent: 'center', alignItems: 'center', zIndex: 999 },
   uploadingContainer: { backgroundColor: 'rgba(255, 255, 255, 0.95)', borderRadius: 16, paddingHorizontal: 32, paddingVertical: 24, alignItems: 'center', minWidth: 150 },

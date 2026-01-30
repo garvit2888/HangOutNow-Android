@@ -11,7 +11,7 @@ import { uploadGroupAvatar } from '@/services/storageService';
 import { doc, updateDoc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useChatStore } from '@/store/chatStore';
-import { ArrowLeft, Camera, MapPin, Clock } from 'lucide-react-native';
+import { ArrowLeft, Camera, MapPin, Clock, User } from 'lucide-react-native';
 import { sendMessage } from '@/services/chatService';
 import { Group } from '@/types';
 
@@ -31,7 +31,7 @@ export default function GroupDetailsScreen() {
   useEffect(() => {
     if (!id) return;
 
-  const hydrateGroup = (baseGroup?: Group | null, fallbackMembers: any[] = []) => {
+    const hydrateGroup = (baseGroup?: Group | null, fallbackMembers: any[] = []) => {
       if (!baseGroup) return null;
       const mergedMembers =
         Array.isArray(baseGroup.members) && baseGroup.members.length > 0
@@ -47,35 +47,35 @@ export default function GroupDetailsScreen() {
       return hydrated;
     };
 
-  const fetchMembersFromHistory = async (groupId: string) => {
-    try {
-      const activityDoc = await getDoc(doc(db, 'activities', groupId));
-      if (activityDoc.exists()) {
-        const data = activityDoc.data() as Group;
-        const members = Array.isArray(data.members) ? data.members : [];
-        if (members.length > 0) {
-          return members;
+    const fetchMembersFromHistory = async (groupId: string) => {
+      try {
+        const activityDoc = await getDoc(doc(db, 'activities', groupId));
+        if (activityDoc.exists()) {
+          const data = activityDoc.data() as Group;
+          const members = Array.isArray(data.members) ? data.members : [];
+          if (members.length > 0) {
+            return members;
+          }
         }
+      } catch (error) {
+        console.log('Could not fetch members from activities collection:', error);
       }
-    } catch (error) {
-      console.log('Could not fetch members from activities collection:', error);
-    }
 
-    try {
-      const archiveRef = collection(db, 'archived_activities');
-      const snapshot = await getDocs(archiveRef);
-      for (const docSnapshot of snapshot.docs) {
-        const data = docSnapshot.data() as Group;
-        if (docSnapshot.id === groupId && Array.isArray(data.members) && data.members.length > 0) {
-          return data.members;
+      try {
+        const archiveRef = collection(db, 'archived_activities');
+        const snapshot = await getDocs(archiveRef);
+        for (const docSnapshot of snapshot.docs) {
+          const data = docSnapshot.data() as Group;
+          if (docSnapshot.id === groupId && Array.isArray(data.members) && data.members.length > 0) {
+            return data.members;
+          }
         }
+      } catch (error) {
+        console.log('Could not fetch members from archived activities:', error);
       }
-    } catch (error) {
-      console.log('Could not fetch members from archived activities:', error);
-    }
 
-    return lastKnownMembersRef.current;
-  };
+      return lastKnownMembersRef.current;
+    };
 
     const storeGroup =
       activeGroups.find(g => g.id === id) ||
@@ -94,7 +94,7 @@ export default function GroupDetailsScreen() {
         if (!isMounted) return;
         if (groupDoc.exists()) {
           const firestoreGroup = groupDoc.data() as Group;
-          const hydratedFirestoreGroup = hydrateGroup(
+          let hydratedFirestoreGroup = hydrateGroup(
             {
               ...(storeGroup || {}),
               ...firestoreGroup,
@@ -149,7 +149,7 @@ export default function GroupDetailsScreen() {
 
   const calculateAge = (dobString?: string): number | null => {
     if (!dobString) return null;
-    
+
     try {
       // Handle DD/MM/YYYY format (from onboarding)
       if (dobString.includes('/')) {
@@ -158,54 +158,54 @@ export default function GroupDetailsScreen() {
           const day = parseInt(parts[0], 10);
           const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
           const year = parseInt(parts[2], 10);
-          
+
           if (isNaN(day) || isNaN(month) || isNaN(year)) {
             return null;
           }
-          
+
           const dob = new Date(year, month, day);
           const today = new Date();
-          
+
           // Validate the date is valid
           if (isNaN(dob.getTime())) {
             return null;
           }
-          
+
           let age = today.getFullYear() - dob.getFullYear();
           const monthDiff = today.getMonth() - dob.getMonth();
-          
+
           // Adjust age if birthday hasn't occurred this year
           if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
             age--;
           }
-          
+
           // Validate age is reasonable (between 0 and 150)
           if (age < 0 || age > 150) {
             return null;
           }
-          
+
           return age;
         }
       }
-      
+
       // Try parsing as ISO date string (fallback)
       const dob = new Date(dobString);
       if (isNaN(dob.getTime())) {
         return null;
       }
-      
+
       const today = new Date();
       let age = today.getFullYear() - dob.getFullYear();
       const monthDiff = today.getMonth() - dob.getMonth();
-      
+
       if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
         age--;
       }
-      
+
       if (age < 0 || age > 150) {
         return null;
       }
-      
+
       return age;
     } catch (error) {
       console.error('❌ Error calculating age:', error, 'DOB:', dobString);
@@ -221,7 +221,7 @@ export default function GroupDetailsScreen() {
 
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
+
       if (permissionResult.granted === false) {
         Alert.alert('Permission Required', 'Permission to access camera roll is required!');
         return;
@@ -236,27 +236,27 @@ export default function GroupDetailsScreen() {
 
       if (!result.canceled && result.assets[0]) {
         const localUri = result.assets[0].uri;
-        
+
         try {
           // Show loading state
           Alert.alert('Uploading...', 'Please wait while we upload the group picture');
-          
+
           // Upload to Firebase Storage
           console.log('📤 Uploading group avatar to Firebase Storage...');
           const cloudUrl = await uploadGroupAvatar(localUri, group.id);
           console.log('✅ Group avatar uploaded to cloud:', cloudUrl);
-          
+
           // Update in Firestore
           await updateDoc(doc(db, 'activities', group.id), {
             groupAvatar: cloudUrl,
           });
           console.log('✅ Group avatar updated in Firestore');
-          
+
           // Update local group state
           const updatedGroup = { ...group, groupAvatar: cloudUrl };
           updateGroup(updatedGroup);
           setGroup(updatedGroup);
-          
+
           // Update chat preview avatar
           upsertChatPreview({
             id: group.id,
@@ -268,7 +268,7 @@ export default function GroupDetailsScreen() {
             unread: 0,
             isGroupChat: true,
           });
-          
+
           // Post system message in chat about picture change
           try {
             await sendMessage(group.id, {
@@ -280,7 +280,7 @@ export default function GroupDetailsScreen() {
           } catch (e) {
             // ignore
           }
-          
+
           console.log('✅ Group picture updated everywhere');
           Alert.alert('Success', 'Group picture updated and visible to everyone!');
         } catch (uploadError) {
@@ -323,15 +323,21 @@ export default function GroupDetailsScreen() {
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {/* Group Avatar */}
           <View style={styles.avatarSection}>
-            <TouchableOpacity 
-              onPress={handleGroupAvatarPress} 
+            <TouchableOpacity
+              onPress={handleGroupAvatarPress}
               style={styles.avatarContainer}
               disabled={!isCreator}
             >
-              <Image
-                source={{ uri: group.groupAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(group.name)}&size=200&background=random` }}
-                style={styles.groupAvatar}
-              />
+              {(group.groupAvatar && !group.groupAvatar.includes('ui-avatars.com')) ? (
+                <Image
+                  source={{ uri: group.groupAvatar }}
+                  style={styles.groupAvatar}
+                />
+              ) : (
+                <View style={[styles.groupAvatar, styles.defaultGroupAvatar]}>
+                  <User size={60} color="#FFFFFF" fill="#FFFFFF" />
+                </View>
+              )}
               {isCreator && (
                 <View style={styles.cameraIconContainer}>
                   <Camera size={20} color={Colors.white} />
@@ -364,7 +370,7 @@ export default function GroupDetailsScreen() {
           {/* Members Section */}
           <View style={styles.membersSection}>
             <Text style={styles.sectionTitle}>Members ({group.members.length}/{group.maxMembers})</Text>
-            
+
             {group.members.map((member: any, index: number) => {
               console.log('👤 Rendering member:', { id: member.id, name: member.name, email: member.email });
               console.log('🔍 Current user ID:', currentUserId);
@@ -373,7 +379,7 @@ export default function GroupDetailsScreen() {
               const isActivityCreator = member.id === group.createdBy;
               const isCurrentUser = member.id === currentUserId || member.email === currentUserId;
               const avatarUrl = member.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}`;
-              
+
               return (
                 <View key={member.id || index} style={[styles.memberCard, isCurrentUser && styles.currentUserCard]}>
                   <Image
@@ -455,6 +461,11 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     borderWidth: 4,
     borderColor: Colors.secondary,
+  },
+  defaultGroupAvatar: {
+    backgroundColor: '#dbdbdb',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   cameraIconContainer: {
     position: 'absolute',
