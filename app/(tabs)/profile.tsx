@@ -30,7 +30,7 @@ export default function ProfileScreen() {
   const handleProfilePicturePress = async () => {
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
+
       if (permissionResult.granted === false) {
         Alert.alert('Permission Required', 'Permission to access camera roll is required!');
         return;
@@ -45,16 +45,16 @@ export default function ProfileScreen() {
 
       if (!result.canceled && result.assets[0]) {
         const localUri = result.assets[0].uri;
-        
+
         try {
           // Show loading state
           Alert.alert('Uploading...', 'Please wait while we upload your profile picture');
-          
+
           // Upload to Firebase Storage
           console.log('📤 Uploading profile picture to Firebase Storage...');
           const cloudUrl = await uploadUserAvatar(localUri, currentUserId);
           console.log('✅ Profile picture uploaded to cloud:', cloudUrl);
-          
+
           // Update in Firestore
           const currentUser = auth.currentUser;
           if (currentUser) {
@@ -62,22 +62,22 @@ export default function ProfileScreen() {
               avatar: cloudUrl,
             });
             console.log('✅ Profile picture updated in Firestore');
-            
+
             // Update user's avatar in ALL activities where they're a member
             console.log('🔄 Updating avatar in all activities...');
             console.log('🔍 Looking for user ID:', currentUser.uid);
             const activitiesRef = collection(db, 'activities');
             const activitiesSnapshot = await getDocs(activitiesRef);
-            
+
             const updatePromises = [];
             activitiesSnapshot.forEach((activityDoc) => {
               const activityData = activityDoc.data();
               console.log('🔍 Checking activity:', activityDoc.id, 'with members:', activityData.members.map((m: any) => ({ id: m.id, email: m.email })));
-              
-              const memberIndex = activityData.members.findIndex((member: any) => 
+
+              const memberIndex = activityData.members.findIndex((member: any) =>
                 member.id === currentUser.uid || member.email === currentUser.uid
               );
-              
+
               if (memberIndex !== -1) {
                 console.log('✅ Found user in activity:', activityDoc.id, 'at index:', memberIndex);
                 // User is a member of this activity, update their avatar
@@ -86,7 +86,7 @@ export default function ProfileScreen() {
                   ...updatedMembers[memberIndex],
                   avatar: cloudUrl
                 };
-                
+
                 updatePromises.push(
                   updateDoc(doc(db, 'activities', activityDoc.id), {
                     members: updatedMembers
@@ -96,7 +96,7 @@ export default function ProfileScreen() {
                 console.log('❌ User not found in activity:', activityDoc.id);
               }
             });
-            
+
             if (updatePromises.length > 0) {
               await Promise.all(updatePromises);
               console.log(`✅ Updated avatar in ${updatePromises.length} activities`);
@@ -104,14 +104,14 @@ export default function ProfileScreen() {
               console.log('⚠️ No activities found to update');
             }
           }
-          
+
           // Update local state
           setProfileImage(cloudUrl);
           setProfileAvatar(cloudUrl);
-          
+
           // Update avatar in ALL existing groups where this user is a member
           updateUserAvatar(currentUserId, cloudUrl);
-          
+
           // Update avatar in ALL chat previews for groups where this user is a member
           chats.forEach(chat => {
             if (chat.isGroupChat) {
@@ -122,10 +122,10 @@ export default function ProfileScreen() {
               });
             }
           });
-          
+
           console.log('✅ Profile picture updated everywhere');
           Alert.alert('Success', 'Profile picture updated in all your activities!');
-          
+
           // Force refresh the map by reloading activities
           console.log('🔄 Refreshing activities to show updated avatar...');
           setTimeout(() => {
@@ -158,14 +158,14 @@ export default function ProfileScreen() {
           onPress: async () => {
             try {
               console.log('🔄 Starting logout process...');
-              
+
               // Sign out from Firebase
               await signOut(auth);
-              
+
               // NOTE: We DON'T clear any data on logout!
               // Like Instagram/WhatsApp, when you log back in, your data is still there
               // All data (profile, chats, activities) persists in AsyncStorage
-              
+
               console.log('✅ User signed out successfully');
               router.replace('/login');
             } catch (error) {
@@ -177,7 +177,7 @@ export default function ProfileScreen() {
       ]
     );
   };
-  
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.primary }}>
       <LinearGradient colors={[Colors.primary, Colors.darkPurple]} style={styles.container}>
@@ -195,64 +195,52 @@ export default function ProfileScreen() {
             </TouchableOpacity>
             <Text style={styles.name}>{profile?.fullName || 'User'}</Text>
             <Text style={styles.username}>{profile?.email || 'user@example.com'}</Text>
-        
+
             {profile?.gender && (
               <View style={styles.infoContainer}>
                 <Text style={styles.infoText}>Gender: {profile.gender}</Text>
               </View>
             )}
-            
+
             {profile?.instagramUsername && (
               <View style={styles.infoContainer}>
                 <Text style={styles.infoText}>Instagram: @{profile.instagramUsername}</Text>
               </View>
             )}
           </View>
-          
+
           <View style={styles.settingsContainer}>
             <TouchableOpacity style={styles.settingItem} onPress={() => setSettingsVisible(true)}>
               <View style={styles.settingLeft}>
-                <View style={[styles.iconContainer, { backgroundColor: '#4CAF50' }]}> 
-                  <Settings size={20} color={Colors.white} />
-                </View>
                 <Text style={styles.settingText}>App Settings</Text>
               </View>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.settingItem} onPress={() => setPastActivitiesVisible(true)}>
               <View style={styles.settingLeft}>
-                <View style={[styles.iconContainer, { backgroundColor: '#FF9800' }]}> 
-                  <Clock size={20} color={Colors.white} />
-                </View>
                 <Text style={styles.settingText}>Past Activities</Text>
               </View>
             </TouchableOpacity>
-            
+
             <TouchableOpacity style={styles.settingItem} onPress={() => router.push('/privacy-policy')}>
               <View style={styles.settingLeft}>
-                <View style={[styles.iconContainer, { backgroundColor: '#2196F3' }]}> 
-                  <Shield size={20} color={Colors.white} />
-                </View>
                 <Text style={styles.settingText}>Privacy Policy</Text>
               </View>
             </TouchableOpacity>
-            
+
             <TouchableOpacity style={styles.settingItem} onPress={() => router.push('/terms-and-conditions')}>
               <View style={styles.settingLeft}>
-                <View style={[styles.iconContainer, { backgroundColor: '#9C27B0' }]}> 
-                  <FileText size={20} color={Colors.white} />
-                </View>
                 <Text style={styles.settingText}>Terms and Conditions</Text>
               </View>
             </TouchableOpacity>
-            
+
             <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
               <LogOut size={20} color={Colors.white} />
               <Text style={styles.logoutText}>Log Out</Text>
             </TouchableOpacity>
           </View>
         </View>
-        <AppSettingsModal 
+        <AppSettingsModal
           visible={settingsVisible}
           initialMaxAgeDiff={maxAgeDifference}
           onClose={() => setSettingsVisible(false)}
