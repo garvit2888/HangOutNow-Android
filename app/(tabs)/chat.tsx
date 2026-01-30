@@ -18,7 +18,7 @@ export default function ChatScreen() {
   const { addNotification } = useNotificationStore();
   const isChatTabFocused = useIsFocused();
   const currentUserId = profile?.uid || loginEmail || 'current_user_id';
-  
+
   // Track last known unread counts to prevent race conditions
   const lastUnreadCounts = React.useRef<Record<string, number>>({});
   const processedMessageIds = React.useRef<Record<string, Set<string>>>({}); // Track processed message IDs per activity
@@ -29,7 +29,7 @@ export default function ChatScreen() {
     if (!currentUserId || currentUserId === 'current_user_id') return;
 
     const unsubscribes: (() => void)[] = [];
-    
+
     // Find all activities the user is a member of
     const userActivities = activeGroups.filter(activity =>
       activity.members.some(m => m.id === currentUserId || m.email === currentUserId)
@@ -49,46 +49,46 @@ export default function ChatScreen() {
       const unsubscribe = subscribeToMessages(activity.id, (firestoreMessages) => {
         if (firestoreMessages.length > 0) {
           const lastMessage = firestoreMessages[firestoreMessages.length - 1];
-          
+
           // Get the set of already processed message IDs for this activity
           const processedIds = processedMessageIds.current[activity.id] || new Set();
-          
+
           // Filter out messages we've already processed
           const newMessages = firestoreMessages.filter(msg => !processedIds.has(msg.id));
           const newMessagesFromOthers = newMessages.filter(msg => msg.senderId !== currentUserId);
-          
+
           // Add new message IDs to the processed set
           newMessages.forEach(msg => {
             processedIds.add(msg.id);
           });
-          
+
           console.log(`📬 Activity ${activity.id}: ${newMessages.length} new messages (${newMessagesFromOthers.length} from others)`);
-          
+
           // Determine if chat is currently open and should be marked as read
           const isCurrentlyViewingChat = activeChat === activity.id;
           const shouldNotify = !isCurrentlyViewingChat && !isChatTabFocused;
-          
+
           // Get current unread count from store
           const { chats: currentChats } = useChatStore.getState();
           const existingChat = currentChats.find(c => c.id === activity.id);
           let currentUnread = existingChat?.unread || 0;
-          
+
           // Only increment if there are actually new messages from others
           if (!isCurrentlyViewingChat && newMessagesFromOthers.length > 0) {
             // Increment unread for each new message from others
             for (let i = 0; i < newMessagesFromOthers.length; i++) {
               incrementUnread(activity.id);
             }
-            
+
             // Get updated unread count after incrementing
             const { chats: updatedChats } = useChatStore.getState();
             const updatedChat = updatedChats.find(c => c.id === activity.id);
             currentUnread = updatedChat?.unread || 0;
-            
+
             // Create notification for new message
             if (shouldNotify) {
               const message = newMessagesFromOthers[newMessagesFromOthers.length - 1];
-              
+
               // In-app notification
               addNotification({
                 type: 'new_message',
@@ -125,10 +125,10 @@ export default function ChatScreen() {
             // Chat is open, unread count should be 0
             currentUnread = 0;
           }
-          
+
           // Update last known unread count
           lastUnreadCounts.current[activity.id] = currentUnread;
-          
+
           // Only update chat preview with latest message if the chat is NOT currently open
           // This prevents overwriting the unread count when the chat is open
           if (!isCurrentlyViewingChat) {
@@ -136,7 +136,7 @@ export default function ChatScreen() {
               id: activity.id,
               userId: activity.id,
               name: activity.name,
-              avatar: activity.groupAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(activity.name)}&background=random`,
+              avatar: activity.groupAvatar || '',
               lastMessage: lastMessage.imageUri ? '📷 Photo' : lastMessage.text,
               timestamp: lastMessage.timestamp,
               unread: currentUnread,
@@ -154,7 +154,7 @@ export default function ChatScreen() {
       unsubscribes.forEach(unsub => unsub());
     };
   }, [activeGroups, currentUserId, upsertChatPreview, incrementUnread, activeChat, isChatTabFocused, addNotification]);
-  
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.primary }}>
       <LinearGradient
@@ -164,7 +164,7 @@ export default function ChatScreen() {
         <View style={styles.header}>
           <Text style={styles.title}>Messages</Text>
         </View>
-        
+
         <View style={styles.contentContainer}>
           <FlatList
             data={chats}

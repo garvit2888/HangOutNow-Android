@@ -33,7 +33,7 @@ export default function GroupCreationModal({ visible, onClose }: GroupCreationMo
   const [selectedMemberCount, setSelectedMemberCount] = useState<number>(5);
   const [meetingLocation, setMeetingLocation] = useState<string>('');
   const [showMapPicker, setShowMapPicker] = useState<boolean>(false);
-  const [selectedLocation, setSelectedLocation] = useState<{latitude: number, longitude: number, address: string} | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{ latitude: number, longitude: number, address: string } | null>(null);
 
   const handleCreateGroup = () => {
     if (!selectedMood || !groupName.trim() || (!meetingLocation.trim() && !selectedLocation)) {
@@ -62,7 +62,7 @@ export default function GroupCreationModal({ visible, onClose }: GroupCreationMo
       id: newGroup.chatId,
       userId: newGroup.id,
       name: newGroup.name,
-      avatar: newGroup.groupAvatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(newGroup.name),
+      avatar: newGroup.groupAvatar || '',
       lastMessage: '',
       timestamp: new Date().toISOString(),
       unread: 0,
@@ -73,7 +73,7 @@ export default function GroupCreationModal({ visible, onClose }: GroupCreationMo
     resetForm();
   };
 
-  const handleMapLocationSelect = (location: {latitude: number, longitude: number, address: string}) => {
+  const handleMapLocationSelect = (location: { latitude: number, longitude: number, address: string }) => {
     setSelectedLocation(location);
     setMeetingLocation(location.address);
     setShowMapPicker(false);
@@ -106,114 +106,114 @@ export default function GroupCreationModal({ visible, onClose }: GroupCreationMo
     >
       <TouchableWithoutFeedback onPress={dismissKeyboard}>
         <View style={styles.centeredView}>
-          <TouchableWithoutFeedback onPress={() => {}}>
+          <TouchableWithoutFeedback onPress={() => { }}>
             <View style={styles.modalView}>
-          <Text style={styles.modalTitle}>Create New Group</Text>
+              <Text style={styles.modalTitle}>Create New Group</Text>
 
-          {/* Group Name Input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Group Name</Text>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Enter group name..."
-              placeholderTextColor={Colors.gray}
-              value={groupName}
-              onChangeText={setGroupName}
-              maxLength={50}
-            />
-          </View>
+              {/* Group Name Input */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Group Name</Text>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Enter group name..."
+                  placeholderTextColor={Colors.gray}
+                  value={groupName}
+                  onChangeText={setGroupName}
+                  maxLength={50}
+                />
+              </View>
 
-          {/* Mood Selection */}
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Choose Mood</Text>
-            <View style={styles.moodOptionsContainer}>
-              {moodOptions.map((mood) => (
+              {/* Mood Selection */}
+              <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>Choose Mood</Text>
+                <View style={styles.moodOptionsContainer}>
+                  {moodOptions.map((mood) => (
+                    <TouchableOpacity
+                      key={mood.id}
+                      style={[
+                        styles.moodOption,
+                        { backgroundColor: mood.color },
+                        selectedMood === mood.id && styles.selectedMoodOption,
+                      ]}
+                      onPress={() => setSelectedMood(mood.id)}
+                    >
+                      <Text style={styles.moodEmoji}>
+                        {mood.id === 'party' && '⚡'}
+                        {mood.id === 'coffee' && '☕'}
+                        {mood.id === 'food' && '🍴'}
+                        {mood.id === 'chill' && '☁️'}
+                        {mood.id === 'movie' && '🎬'}
+                        {mood.id === 'walk' && '🚶'}
+                      </Text>
+                      <Text style={styles.moodOptionText}>{mood.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Member Count Selection */}
+              <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>Max Members</Text>
+                <View style={styles.memberCountContainer}>
+                  {memberCountOptions.map((count) => (
+                    <TouchableOpacity
+                      key={count}
+                      style={[
+                        styles.memberCountOption,
+                        selectedMemberCount === count && styles.selectedMemberCountOption,
+                      ]}
+                      onPress={() => setSelectedMemberCount(count)}
+                    >
+                      <Users size={16} color={selectedMemberCount === count ? Colors.white : Colors.primary} />
+                      <Text style={[
+                        styles.memberCountText,
+                        selectedMemberCount === count && styles.selectedMemberCountText,
+                      ]}>
+                        {count}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Meeting Location */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Meeting Location</Text>
+                <View style={styles.locationInputContainer}>
+                  <MapPin size={20} color={Colors.gray} style={styles.locationIcon} />
+                  <TextInput
+                    style={styles.locationInput}
+                    placeholder="Where will you meet? (e.g., Central Park, Starbucks on 5th Ave)"
+                    placeholderTextColor={Colors.gray}
+                    value={meetingLocation}
+                    onChangeText={setMeetingLocation}
+                    maxLength={100}
+                    multiline
+                  />
+                </View>
                 <TouchableOpacity
-                  key={mood.id}
-                  style={[
-                    styles.moodOption,
-                    { backgroundColor: mood.color },
-                    selectedMood === mood.id && styles.selectedMoodOption,
-                  ]}
-                  onPress={() => setSelectedMood(mood.id)}
+                  style={styles.mapButton}
+                  onPress={() => setShowMapPicker(true)}
                 >
-                  <Text style={styles.moodEmoji}>
-                    {mood.id === 'party' && '⚡'}
-                    {mood.id === 'coffee' && '☕'}
-                    {mood.id === 'food' && '🍴'}
-                    {mood.id === 'chill' && '☁️'}
-                    {mood.id === 'movie' && '🎬'}
-                    {mood.id === 'walk' && '🚶'}
-                  </Text>
-                  <Text style={styles.moodOptionText}>{mood.label}</Text>
+                  <Map size={16} color={Colors.primary} />
+                  <Text style={styles.mapButtonText}>Add on Map</Text>
                 </TouchableOpacity>
-              ))}
-            </View>
-          </View>
+              </View>
 
-          {/* Member Count Selection */}
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Max Members</Text>
-            <View style={styles.memberCountContainer}>
-              {memberCountOptions.map((count) => (
-                <TouchableOpacity
-                  key={count}
-                  style={[
-                    styles.memberCountOption,
-                    selectedMemberCount === count && styles.selectedMemberCountOption,
-                  ]}
-                  onPress={() => setSelectedMemberCount(count)}
-                >
-                  <Users size={16} color={selectedMemberCount === count ? Colors.white : Colors.primary} />
-                  <Text style={[
-                    styles.memberCountText,
-                    selectedMemberCount === count && styles.selectedMemberCountText,
-                  ]}>
-                    {count}
-                  </Text>
+              {/* Action Buttons */}
+              <View style={styles.actionsContainer}>
+                <TouchableOpacity style={styles.cancelButton} onPress={handleClose}>
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
                 </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          {/* Meeting Location */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Meeting Location</Text>
-            <View style={styles.locationInputContainer}>
-              <MapPin size={20} color={Colors.gray} style={styles.locationIcon} />
-              <TextInput
-                style={styles.locationInput}
-                placeholder="Where will you meet? (e.g., Central Park, Starbucks on 5th Ave)"
-                placeholderTextColor={Colors.gray}
-                value={meetingLocation}
-                onChangeText={setMeetingLocation}
-                maxLength={100}
-                multiline
-              />
-            </View>
-            <TouchableOpacity 
-              style={styles.mapButton} 
-              onPress={() => setShowMapPicker(true)}
-            >
-              <Map size={16} color={Colors.primary} />
-              <Text style={styles.mapButtonText}>Add on Map</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Action Buttons */}
-          <View style={styles.actionsContainer}>
-            <TouchableOpacity style={styles.cancelButton} onPress={handleClose}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.createButton} onPress={handleCreateGroup}>
-              <Text style={styles.createButtonText}>Create Group</Text>
-            </TouchableOpacity>
-          </View>
+                <TouchableOpacity style={styles.createButton} onPress={handleCreateGroup}>
+                  <Text style={styles.createButtonText}>Create Group</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </TouchableWithoutFeedback>
         </View>
       </TouchableWithoutFeedback>
-      
+
       {/* Map Picker Modal */}
       <Modal
         visible={showMapPicker}
@@ -227,7 +227,7 @@ export default function GroupCreationModal({ visible, onClose }: GroupCreationMo
             <Text style={styles.mapModalSubtitle}>
               Choose a location on the map. Groups within 5km will be able to see this location.
             </Text>
-            
+
             {/* Placeholder for map component */}
             <View style={styles.mapPlaceholder}>
               <Map size={48} color={Colors.gray} />
@@ -236,16 +236,16 @@ export default function GroupCreationModal({ visible, onClose }: GroupCreationMo
                 In a real app, this would show an interactive map
               </Text>
             </View>
-            
+
             <View style={styles.mapModalActions}>
-              <TouchableOpacity 
-                style={styles.mapCancelButton} 
+              <TouchableOpacity
+                style={styles.mapCancelButton}
                 onPress={() => setShowMapPicker(false)}
               >
                 <Text style={styles.mapCancelButtonText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.mapConfirmButton} 
+              <TouchableOpacity
+                style={styles.mapConfirmButton}
                 onPress={() => handleMapLocationSelect({
                   latitude: 37.7858,
                   longitude: -122.4064,
