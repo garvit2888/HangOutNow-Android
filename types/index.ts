@@ -72,7 +72,6 @@ export type GroupMessage = {
   groupId: string;
   senderId: string;
   senderName: string;
-  senderAvatar?: string;
   text: string;
   timestamp: string;
   imageUri?: string;
