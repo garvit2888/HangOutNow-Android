@@ -861,34 +861,7 @@ export default function MapTab() {
                           </Text>
                         </View>
 
-//                         {/* TEMPORARILY DISABLED - Avatar rendering causes Android clipping
-// {/* Profile pictures around the emoji */}
-//                         {visibleMembers.map((member, index) => {
-                          //                           // Position avatars around the circle
-                          //                           const angle = (index * 120) - 90; // 120° apart, starting from top
-                          //                           const radius = 25; // Distance from center (increased to prevent overlap)
-                          //                           const x = Math.cos(angle * Math.PI / 180) * radius;
-                          //                           const y = Math.sin(angle * Math.PI / 180) * radius;
-                          // 
-                          //                           return (
-                          //                             <View
-                          //                               key={member.id}
-                          //                               style={[
-                          //                                 styles.memberAvatar,
-                          //                                 {
-                          //                                   left: x + 35, // Center offset (container width 70 / 2)
-                          //                                   top: y + 35,  // Center offset (container height 70 / 2)
-                          //                                 }
-                          //                               ]}
-                          //                             >
-                          //                               <Image
-                          //                                 source={{ uri: member.avatar }}
-                          //                                 style={styles.memberAvatarImage}
-                          //                               />
-                          //                             </View>
-                          //                           );
-                        })}
-*/}
+
                       </View>
                     </Marker>
                   );
