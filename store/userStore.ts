@@ -17,6 +17,7 @@ export interface UserProfile {
   isPhotoVerified: boolean;
   instagramUsername?: string;
   avatar?: string; // NEW: profile avatar uri
+  pushToken?: string; // Expo push token for notifications
   hasCompletedOnboarding?: boolean; // NEW: track if user completed onboarding
 }
 
@@ -124,7 +125,7 @@ export const useUserStore = create<UserState>()(
         try {
           // Set current user ID for storage isolation
           setCurrentUserId(uid);
-          
+
           const userDoc = await getDoc(doc(db, 'users', uid));
           if (userDoc.exists()) {
             const userData = userDoc.data();
@@ -139,6 +140,7 @@ export const useUserStore = create<UserState>()(
                 isPhotoVerified: userData.isPhotoVerified || false,
                 instagramUsername: userData.instagramUsername,
                 avatar: userData.avatar,
+                pushToken: userData.pushToken,
                 hasCompletedOnboarding: userData.hasCompletedOnboarding || false,
               },
               loginEmail: userData.email,

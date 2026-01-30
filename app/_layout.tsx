@@ -10,10 +10,10 @@ import { useUserStore } from '@/store/userStore';
 import { useGroupStore } from '@/store/groupStore';
 import ActivityStartedModal from '@/components/ActivityStartedModal';
 import { leaveActivity as leaveActivityFirestore } from '@/services/activityService';
-import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { requestNotificationPermissions, setupNotificationListeners } from '@/services/pushNotificationService';
+import { requestNotificationPermissions, setupNotificationListeners, getPushToken } from '@/services/pushNotificationService';
 import { useRouter, useSegments } from 'expo-router';
 import { Group } from '@/types';
 
@@ -90,6 +90,28 @@ function RootLayoutNav() {
       loadShownIds();
     }
   }, [user]);
+
+  // Register push token on login
+  useEffect(() => {
+    const registerToken = async () => {
+      if (user && profile?.uid) {
+        try {
+          const token = await getPushToken();
+          // Only update if token is different to save writes
+          if (token && token !== profile.pushToken) {
+            console.log('📱 Registering push token:', token);
+            await updateDoc(doc(db, 'users', profile.uid), {
+              pushToken: token
+            });
+          }
+        } catch (error) {
+          console.error('❌ Error registering push token:', error);
+        }
+      }
+    };
+
+    registerToken();
+  }, [user, profile?.uid]);
 
   // Save shown activity IDs to AsyncStorage
   const saveShownIds = async (ids: Set<string>) => {
