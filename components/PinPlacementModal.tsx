@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, SafeAreaView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, SafeAreaView, Alert, Platform } from 'react-native';
 import MapView, { Marker, PROVIDER_APPLE } from 'react-native-maps';
 import Colors from '@/constants/colors';
 import { Check, X } from 'lucide-react-native';
@@ -112,6 +112,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
+    paddingTop: Platform.OS === 'android' ? 50 : 12, // Extra padding for Android status bar
     backgroundColor: Colors.primary,
   },
   cancelButton: {
