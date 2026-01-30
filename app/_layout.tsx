@@ -198,8 +198,12 @@ function RootLayoutNav() {
                 (data.createdBy && typeof data.createdBy === 'string' &&
                   (data.createdBy.includes(currentUserId) || data.createdBy.includes(loginEmail || '')));
 
-              // Only include activities the user created or joined (and hasn't left)
-              if (isCreator || isMember) {
+              // Check if we haven't explicitly ended/dismissed this this activity
+              // We use shownActivityIds to track activities the user has "ended" or "dismissed"
+              const notEndedYet = !shownActivityIds.current.has(doc.id);
+
+              // Only include activities the user created or joined AND hasn't ended yet
+              if ((isCreator || isMember) && notEndedYet) {
                 const createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
 
                 // Get emoji exactly like PastActivitiesModal does: access activity.emoji directly
@@ -372,7 +376,15 @@ function RootLayoutNav() {
       leaveGroup(startedActivity.id, currentUserId);
 
       console.log('👋 User marked activity as ended:', startedActivity.name);
+      console.log('👋 User marked activity as ended:', startedActivity.name);
+
+      // Add to ignore list so it doesn't pop up again
+      shownActivityIds.current.add(startedActivity.id);
+      await saveShownIds(shownActivityIds.current);
+
       setSOSActive(false);
+      setStartedActivity(null);
+      setShowActivityStartedModal(false);
     } catch (error) {
       console.error('❌ Error leaving activity:', error);
       Alert.alert('Error', 'Failed to leave activity. Please try again.');
