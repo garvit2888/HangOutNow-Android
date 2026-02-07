@@ -1,16 +1,29 @@
 /**
  * Push Notification Service
  * Handles device push notifications for messages and activity events
+ * 
+ * Note: Push notifications are not supported in Expo Go (SDK 53+).
+ * This service gracefully degrades in Expo Go and will work in development/production builds.
  */
 
 import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
+import { Platform, LogBox } from 'react-native';
 import { useNotificationStore } from '@/store/notificationStore';
 
 import Constants from 'expo-constants';
 
+// Suppress the Expo Go notification warning since we handle it gracefully
+LogBox.ignoreLogs([
+  'expo-notifications: Android Push notifications',
+  'expo-notifications was removed from Expo Go',
+]);
+
 // Check if running in Expo Go
 const isExpoGo = Constants.appOwnership === 'expo';
+
+if (isExpoGo) {
+  console.log('ℹ️ Running in Expo Go - Push notifications are disabled (use a development build for full notification support)');
+}
 
 // Configure notification behavior (only if not in Expo Go)
 if (!isExpoGo) {
@@ -115,6 +128,37 @@ export const getPushToken = async (): Promise<string | null> => {
     return null;
   }
 };
+
+/**
+ * Save push token to Firestore for Cloud Functions to use
+ */
+export const savePushToken = async (userId: string, token: string): Promise<void> => {
+  if (isExpoGo) {
+    console.log('⚠️ Skipping push token save in Expo Go');
+    return;
+  }
+
+  try {
+    const { doc, setDoc, serverTimestamp } = await import('firebase/firestore');
+    const { db } = await import('@/config/firebase');
+
+    // Save token to user's pushTokens subcollection
+    const tokenId = token.replace(/[^a-zA-Z0-9]/g, '_'); // Sanitize token for use as doc ID
+    const tokenRef = doc(db, 'users', userId, 'pushTokens', tokenId);
+
+    await setDoc(tokenRef, {
+      token,
+      deviceId: Platform.OS,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
+
+    console.log('✅ Push token saved to Firestore');
+  } catch (error) {
+    console.error('❌ Error saving push token:', error);
+  }
+};
+
 
 /**
  * Schedule a local push notification

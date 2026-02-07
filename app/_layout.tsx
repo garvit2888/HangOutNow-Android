@@ -13,7 +13,7 @@ import { leaveActivity as leaveActivityFirestore } from '@/services/activityServ
 import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { requestNotificationPermissions, setupNotificationListeners } from '@/services/pushNotificationService';
+import { requestNotificationPermissions, setupNotificationListeners, getPushToken, savePushToken } from '@/services/pushNotificationService';
 import { useRouter, useSegments } from 'expo-router';
 import { Group } from '@/types';
 
@@ -39,7 +39,10 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (loaded) {
-      SplashScreen.hideAsync();
+      // Add a small delay to ensure smooth transition
+      setTimeout(() => {
+        SplashScreen.hideAsync();
+      }, 100);
     }
   }, [loaded]);
 
@@ -122,8 +125,9 @@ function RootLayoutNav() {
 
     try {
       const now = new Date();
-      // Only consider activities that started within the last 1 day to avoid old activities
-      const oneDayAgo = new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000);
+      // Only consider activities that started within the last 6 hours (matching SOS duration)
+      // This matches the SOS expiration time and prevents showing modal for old activities
+      const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000);
 
       // Check if there's an active SOS state that should be cleared (6 hours after activity started)
       if (sos?.active && sos?.activityId) {
@@ -172,9 +176,9 @@ function RootLayoutNav() {
           const hasStarted = expiresAt <= now;
 
           if (hasStarted) {
-            // Only consider activities that started recently (within last 1 day)
+            // Only consider activities that started recently (within last 6 hours)
             // This filters out very old activities
-            const startedRecently = expiresAt >= oneDayAgo;
+            const startedRecently = expiresAt >= sixHoursAgo;
 
             if (startedRecently) {
 
@@ -434,7 +438,15 @@ function RootLayoutNav() {
 
     const setupNotifications = async () => {
       // Request permissions (safe in Expo Go)
-      await requestNotificationPermissions();
+      const hasPermission = await requestNotificationPermissions();
+
+      // Get and save push token (only works in development/production builds, not Expo Go)
+      if (hasPermission && currentUserId && currentUserId !== 'current_user_id') {
+        const token = await getPushToken();
+        if (token) {
+          await savePushToken(currentUserId, token);
+        }
+      }
 
       // Set up listeners (safe in Expo Go)
       const cleanupListeners = setupNotificationListeners(router);
@@ -445,7 +457,7 @@ function RootLayoutNav() {
     return () => {
       cleanupPromise.then(cleanup => cleanup && cleanup());
     };
-  }, [user, router]);
+  }, [user, router, currentUserId]);
 
   // Show nothing while checking authentication state
   if (loading) {

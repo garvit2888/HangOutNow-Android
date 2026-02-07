@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Alert, ScrollView, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
@@ -12,7 +12,7 @@ import { doc, updateDoc, collection, getDocs, query, where } from 'firebase/fire
 import { db, auth } from '@/config/firebase';
 import { useGroupStore } from '@/store/groupStore';
 import { useChatStore } from '@/store/chatStore';
-import { Settings, LogOut, Camera, Clock, Shield, FileText } from 'lucide-react-native';
+import { Settings, LogOut, Camera, Clock, Shield, FileText, Mail } from 'lucide-react-native';
 import AppSettingsModal from '../components/AppSettingsModal';
 import PastActivitiesModal from '@/components/PastActivitiesModal';
 import { signOut } from 'firebase/auth';
@@ -143,6 +143,25 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleSupportPress = async () => {
+    const email = 'hangoutnow@gmail.com';
+    const subject = '';
+    const body = '';
+    const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    try {
+      const canOpen = await Linking.canOpenURL(mailtoUrl);
+      if (canOpen) {
+        await Linking.openURL(mailtoUrl);
+      } else {
+        Alert.alert('Error', 'Unable to open email app. Please ensure you have an email app installed.');
+      }
+    } catch (error) {
+      console.error('Error opening email app:', error);
+      Alert.alert('Error', 'Failed to open email app.');
+    }
+  };
+
   const handleLogout = () => {
     Alert.alert(
       'Logout',
@@ -231,6 +250,12 @@ export default function ProfileScreen() {
             <TouchableOpacity style={styles.settingItem} onPress={() => router.push('/terms-and-conditions')}>
               <View style={styles.settingLeft}>
                 <Text style={styles.settingText}>Terms and Conditions</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.settingItem} onPress={handleSupportPress}>
+              <View style={styles.settingLeft}>
+                <Text style={styles.settingText}>Support</Text>
               </View>
             </TouchableOpacity>
 
@@ -355,6 +380,7 @@ const styles = StyleSheet.create({
   settingText: {
     fontSize: 16,
     color: Colors.black,
+    fontWeight: 'bold',
   },
   connectButton: {
     backgroundColor: Colors.secondary,

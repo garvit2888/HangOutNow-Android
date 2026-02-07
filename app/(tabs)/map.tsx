@@ -15,6 +15,7 @@ import ActivityCreateModal from '@/components/ActivityCreateModal';
 import ActivityDetailsModal from '@/components/ActivityDetailsModal';
 import * as Location from 'expo-location';
 import { subscribeToActivities, getActiveActivities, joinActivity as joinActivityFirestore, leaveActivity as leaveActivityFirestore, deleteActivity } from '@/services/activityService';
+import { createMarkerIcon } from '@/utils/markerUtils';
 
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
@@ -851,18 +852,9 @@ export default function MapTab() {
                         handleMarkerPress(g);
                       }}
                     >
-                      <View style={styles.markerContainer}>
-                        <View style={[styles.markerPill, isPopular && styles.markerPillPopular]}>
-                          <Text
-                            style={[styles.markerEmoji, isPopular && styles.markerEmojiPopular]}
-                            allowFontScaling={false}
-                          >
-                            {displayEmoji}
-                          </Text>
-                        </View>
-
-
-                      </View>
+                      <Text style={{ fontSize: isPopular ? 40 : 36 }}>
+                        {displayEmoji}
+                      </Text>
                     </Marker>
                   );
                 })}
@@ -1015,14 +1007,30 @@ export default function MapTab() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   mapContainer: { flex: 1, marginHorizontal: 8, marginBottom: 8, borderRadius: 20, overflow: 'hidden', backgroundColor: Colors.white, position: 'relative' },
-  markerContainer: { width: 60, height: 60, alignItems: 'center', justifyContent: 'center', overflow: 'visible' },
-  markerPill: { backgroundColor: Colors.white, width: 50, height: 50, borderRadius: 25, borderWidth: 2, borderColor: '#333', justifyContent: 'center', alignItems: 'center', overflow: 'visible' },
+  markerContainer: { width: 72, height: 72, alignItems: 'center', justifyContent: 'center', overflow: 'visible' },
+  markerBackground: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  markerPill: {
+    backgroundColor: Colors.white,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: '#333',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   floatingSOS: { position: 'absolute', left: 16, bottom: 170, width: 56, height: 56, borderRadius: 28, overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 6, shadowOffset: { width: 0, height: 4 }, elevation: 8, zIndex: 9999 },
   floatingSOSInner: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
   floatingSOSText: { color: Colors.white, fontWeight: '900', letterSpacing: 1, fontSize: 14 },
-  markerPillPopular: { width: 56, height: 56, borderRadius: 28, borderWidth: 3, borderColor: Colors.secondary },
-  markerEmoji: { fontSize: 28, textAlign: 'center' },
-  markerEmojiPopular: { fontSize: 32 },
+  markerPillPopular: { width: 64, height: 64, borderRadius: 32, borderWidth: 3, borderColor: Colors.secondary },
+  markerEmoji: { fontSize: 24, textAlign: 'center', lineHeight: 24, includeFontPadding: false, textAlignVertical: 'center', width: '100%' },
+  markerEmojiPopular: { fontSize: 26, lineHeight: 26 },
   memberAvatar: { position: 'absolute', width: 18, height: 18, borderRadius: 9, overflow: 'hidden', borderWidth: 2, borderColor: Colors.white, backgroundColor: Colors.white, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.3, shadowRadius: 2, elevation: 3 },
   memberAvatarImage: { width: '100%', height: '100%', borderRadius: 7 },
   listViewButton: { position: 'absolute', bottom: 162, right: 16, width: 48, height: 48, borderRadius: 24, backgroundColor: Colors.white, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4, elevation: 5 },

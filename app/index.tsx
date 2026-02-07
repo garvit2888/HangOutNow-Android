@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import SplashScreenComponent from '@/components/SplashScreen';
 import { useAuth } from '@/hooks/useAuth';
@@ -6,10 +6,11 @@ import { useAuth } from '@/hooks/useAuth';
 export default function SplashScreen() {
   const router = useRouter();
   const { user, loading } = useAuth();
+  const [animationComplete, setAnimationComplete] = useState(false);
 
   useEffect(() => {
-    // Wait for auth to finish loading
-    if (!loading) {
+    // Only navigate after BOTH auth is loaded AND animation is complete
+    if (!loading && animationComplete) {
       // Navigate based on auth state
       if (user) {
         console.log('✅ User authenticated, navigating to map');
@@ -19,7 +20,14 @@ export default function SplashScreen() {
         router.replace('/login');
       }
     }
-  }, [loading, user]);
+  }, [loading, user, animationComplete]);
 
-  return <SplashScreenComponent onAnimationComplete={() => { }} />;
+  return (
+    <SplashScreenComponent
+      onAnimationComplete={() => {
+        console.log('🎬 Splash animation complete');
+        setAnimationComplete(true);
+      }}
+    />
+  );
 }

@@ -24,13 +24,13 @@ export default function TermsAndConditionsScreen() {
         </View>
 
         {/* Content */}
-        <ScrollView 
+        <ScrollView
           style={styles.content}
           contentContainerStyle={styles.contentContainer}
           showsVerticalScrollIndicator={false}
         >
           <Text style={styles.lastUpdated}>Last Updated: October 22, 2025</Text>
-          
+
           <Text style={styles.intro}>
             Welcome to Hangout App! These Terms of Service ("Terms") govern your use of our mobile application. By using Hangout App, you agree to these Terms.
           </Text>
@@ -94,7 +94,7 @@ export default function TermsAndConditionsScreen() {
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>6. Content</Text>
-            
+
             <Text style={styles.subsectionTitle}>Your Content</Text>
             <Text style={styles.paragraph}>You retain ownership of content you post, but you grant us a license to:</Text>
             <View style={styles.bulletList}>
@@ -213,8 +213,8 @@ export default function TermsAndConditionsScreen() {
             <Text style={styles.sectionTitle}>16. Contact Information</Text>
             <Text style={styles.paragraph}>For questions about these Terms, please contact us:</Text>
             <Text style={styles.contactInfo}>
-              <Text style={styles.bulletText}>Email:</Text> legal@hangoutapp.com{'\n'}
-              <Text style={styles.bulletText}>Support:</Text> support@hangoutapp.com
+              <Text style={styles.bulletText}>Email:</Text> hangoutnow@gmail.com{'\n'}
+              <Text style={styles.bulletText}>Support:</Text> hangoutnow@gmail.com
             </Text>
           </View>
 

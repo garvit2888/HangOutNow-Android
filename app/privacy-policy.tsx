@@ -24,20 +24,20 @@ export default function PrivacyPolicyScreen() {
         </View>
 
         {/* Content */}
-        <ScrollView 
+        <ScrollView
           style={styles.content}
           contentContainerStyle={styles.contentContainer}
           showsVerticalScrollIndicator={false}
         >
           <Text style={styles.lastUpdated}>Last Updated: October 22, 2025</Text>
-          
+
           <Text style={styles.intro}>
             Hangout App ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our mobile application.
           </Text>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>1. Information We Collect</Text>
-            
+
             <Text style={styles.subsectionTitle}>Personal Information</Text>
             <View style={styles.bulletList}>
               <Text style={styles.bulletPoint}>• <Text style={styles.bulletText}>Account Information:</Text> Name, email address, date of birth, gender</Text>
@@ -154,7 +154,7 @@ export default function PrivacyPolicyScreen() {
             <Text style={styles.sectionTitle}>11. Contact Us</Text>
             <Text style={styles.paragraph}>If you have questions about this Privacy Policy, please contact us at:</Text>
             <Text style={styles.contactInfo}>
-              <Text style={styles.bulletText}>Email:</Text> privacy@hangoutapp.com{'\n'}
+              <Text style={styles.bulletText}>Email:</Text> hangoutnow@gmail.com{'\n'}
               <Text style={styles.bulletText}>Address:</Text> [Your Address]
             </Text>
           </View>
